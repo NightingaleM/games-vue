@@ -1,7 +1,9 @@
 <template>
+  <button @click="createClearWord">空白世界</button>
+  <button @click="createRandomWord">随机世界</button>
   <input type="number" max="500" min="5" v-model="wordSize">
-  <button @click="toNextWord">next word</button>
-  <button @click="autoWordHandle">{{ running ? 'stop' : 'auto' }} word</button>
+  <button @click="toNextWord">下一步</button>
+  <button @click="autoWordHandle">{{ running ? 'stop' : 'auto' }} </button>
   <div id="canvas-box">
     <canvas id="my-canvas" width="1000" height="1000"></canvas>
   </div>
@@ -20,16 +22,28 @@ export default {
   setup(props, context) {
     let canvas = null;
     let canvasCtx = null;
-    let wordSize = ref<number>(100);
-    let cubSize = computed(() => 1000 / wordSize.value);
-    let word = ref(null);
-    watchEffect(() => {
+    let timer = null;
+    const running = ref<Boolean>(false);
+    const wordSize = ref<number>(100);
+    const cubSize = computed(() => 1000 / wordSize.value);
+    const word = ref(null);
+    const createWord = (point) => {
+      clearInterval(timer);
+      running.value = false;
       let w = [];
       for (let long = 0; long < wordSize.value; long++) {
-        w.push(makeArrayByAppoint('random', wordSize.value));
+        w.push(makeArrayByAppoint(point, wordSize.value));
       }
       word.value = w;
-    });
+    };
+    const createClearWord = () => {
+      createWord(0);
+      showWord(word.value,canvasCtx)
+    };
+    const createRandomWord = () => {
+      createWord('random');
+      showWord(word.value,canvasCtx)
+    };
     const canvasMouseEventHandle = (canvasDom) => {
       let changed = [];
       const checkOutCoordinate = (x, y) => {
@@ -47,21 +61,21 @@ export default {
       const canvasMouseDown = event => {
         checkOutCoordinate(event.offsetY, event.offsetX);
         canvasDom.addEventListener('mousemove', canvasMouseMove);
-        canvasDom.addEventListener('mouseup', canvasMouseUp);
-        canvasDom.addEventListener('mouseout', canvasMouseUp);
+        canvasDom.addEventListener('mouseup', canvasEventEnd);
+        canvasDom.addEventListener('mouseout', canvasEventEnd);
       };
       const canvasMouseMove = event => {
         checkOutCoordinate(event.offsetY, event.offsetX);
       };
-      const canvasMouseUp = event => {
+      const canvasEventEnd = event => {
         canvasDom.removeEventListener('mousemove', canvasMouseMove);
-        canvasDom.removeEventListener('mouseup', canvasMouseUp);
-        canvasDom.removeEventListener('mouseout', canvasMouseUp);
+        canvasDom.removeEventListener('mouseup', canvasEventEnd);
+        canvasDom.removeEventListener('mouseout', canvasEventEnd);
         changed = [];
       };
-
       canvasDom.addEventListener('mousedown', canvasMouseDown);
     };
+
     const handleExecute = () => {
       canvas = document.querySelector('#my-canvas');
       canvasCtx = canvas.getContext('2d');
@@ -96,12 +110,11 @@ export default {
       return newWord;
     };
 
-    const running = ref<Boolean>(false);
-    let timer = null;
     const toNextWord = () => {
       word.value = nextWord(word.value);
       showWord(word.value, canvasCtx);
     };
+
     const autoWordHandle = () => {
       if (running.value) {
         clearInterval(timer);
@@ -114,9 +127,12 @@ export default {
       }
     };
     onMounted(() => {
+      createWord('random');
       handleExecute();
     });
     return {
+      createClearWord,
+      createRandomWord,
       wordSize,
       autoWordHandle,
       running,

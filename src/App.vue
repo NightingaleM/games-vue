@@ -1,18 +1,13 @@
 <template>
-<!--    <MAP/>-->
-  <mc/>
+  <header>
+    <nav>
+      <router-link to="/gameoflife">Game of life</router-link>
+    </nav>
+  </header>
+  <div id="content">
+    <router-view/>
+  </div>
+  <footer>
+
+  </footer>
 </template>
-
-<script>
-
-import MAP from './components/lifeMap.vue'
-import mc from './components/lifeMapCanvas.vue'
-
-export default {
-  name: 'App',
-  components: {
-    MAP,
-    mc
-  }
-}
-</script>
